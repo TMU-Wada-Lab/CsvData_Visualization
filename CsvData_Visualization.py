@@ -3,36 +3,33 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.widgets import Button
 import matplotlib.animation as animation
-import time
 
-# CSVファイルのパス
+# 初期のCSVファイルのパス（lowerを設定）
 file_path = '../product_management_rtc/table/products_management_lower.csv'
-
-# 自動更新のフラグ
-auto_update = False
-last_data = None
+last_data = None  # データの変更検出用
+auto_update = False  # 自動更新フラグ
 
 # 商品名に対応するラベルを設定
 label_mapping = {0: 'rice', 1: 'sand', 2: 'juice', 3: 'stick', 4: 'box', 5: 'call'}
 
 # グラフの描画設定
 fig, ax = plt.subplots(figsize=(12, 10))
-plt.subplots_adjust(bottom=0.2)  # ボタンの表示用スペースを確保
+plt.subplots_adjust(bottom=0.3)  # ボタンの表示用スペースを確保
 
 # グラフの範囲設定
 ax.set_xlim(-450, 450)
 ax.set_ylim(400, 800)
 
-# グラフの更新
+# グラフを描画する関数
 def plot_data():
     global last_data
     df = pd.read_csv(file_path)
 
-    # 前回のデータと比較し、変化がない場合は更新しない
+    # 前回のデータと比較して変化がない場合は更新しない
     if df.equals(last_data):
         return
 
-    # データが変化した場合は更新
+    # データが変化した場合に更新
     last_data = df
 
     # グラフをクリアして最新データで再描画
@@ -73,24 +70,41 @@ def plot_data():
         # 商品ラベルを表示
         ax.text(x + 10, y, label, fontsize=12, ha='left', va='center')
 
-    # グラフの更新
+    # グラフを更新
     plt.draw()
 
-# 自動更新ボタンの動作
+# 自動更新をトグルするボタンの機能
 def toggle_auto_update(event):
     global auto_update
     auto_update = not auto_update
     auto_update_button.label.set_text("Stop Auto-Update" if auto_update else "Start Auto-Update")
+
+# ファイルパスをupper/lowerで切り替えるボタンの機能
+def toggle_file_path(event):
+    global file_path
+    if 'lower' in file_path:
+        file_path = '../product_management_rtc/table/products_management_upper.csv'
+        file_path_button.label.set_text("Switch to Lower")
+    else:
+        file_path = '../product_management_rtc/table/products_management_lower.csv'
+        file_path_button.label.set_text("Switch to Upper")
+    # 切り替えた際に即時更新
+    plot_data()
 
 # 自動更新を管理する関数
 def update(frame):
     if auto_update:
         plot_data()
 
-# 自動更新ボタンの作成
-ax_auto_update_button = plt.axes([0.4, 0.05, 0.2, 0.075])  # [左, 下, 幅, 高さ]
+# ボタンの設定
+ax_auto_update_button = plt.axes([0.35, 0.05, 0.2, 0.075])
 auto_update_button = Button(ax_auto_update_button, "Start Auto-Update")
 auto_update_button.on_clicked(toggle_auto_update)
+
+# ファイルパス切り替えボタンの設定
+ax_file_path_button = plt.axes([0.6, 0.05, 0.2, 0.075])
+file_path_button = Button(ax_file_path_button, "Switch to Upper")
+file_path_button.on_clicked(toggle_file_path)
 
 # 初期プロット
 plot_data()
